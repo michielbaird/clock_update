@@ -6,7 +6,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     # Examples:
-    url(r'^/', include('web.urls')),
+    url(r'^', include('web.urls')),
     # url(r'^$', 'wallclock.views.home', name='home'),
     # url(r'^wallclock/', include('wallclock.foo.urls')),
 
