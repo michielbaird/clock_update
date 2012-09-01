@@ -4,16 +4,25 @@ import socket
 from threading import Lock
 from datetime import datetime
 from collections import defaultdict
+from web.lock import FileLock
 
 class IdMismatch(Exception):
     pass
 class ErrorMismatch(Exception):
     pass
 
+class dict2:
+    def __init__(self):
+        self.d = {}
+    def.__get_item__(self, item):
+        if self.d.get(item, None) is not None:
+            self.d[item] = FileLock("/tmp/%s:%d", item)
+        return self.d[item]
+
 class ClockUnit:
     GET_TIME_AND_DATE = 0xe5
     SET_TIME_AND_DATE = 0xe6
-    locks = defaultdict(Lock)
+    locks = dict2()
 
     def __init__(self, host_id):
         self.active = False
@@ -62,7 +71,7 @@ class ClockUnit:
 
 
     def getDateTime(self):
-        ClockUnit.locks[self.host_id].acquire()
+        ClockUnit.locks[self.host_id].acquireBlock()
         ilv = self._buildILV(ClockUnit.GET_TIME_AND_DATE, "")
         result = self._sendAndReceive(ilv)
         id, value = self._unpackILV(result)
@@ -80,7 +89,7 @@ class ClockUnit:
         return datetime(year+2000, month, day, hour, minute, second)
 
     def setDateTime(self, time):
-        ClockUnit.locks[self.host_id].acquire()
+        ClockUnit.locks[self.host_id].acquireBlock()
         dow = (time.weekday() + 1) % 7
         year = time.year - 2000
         month =  time.month
