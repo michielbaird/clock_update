@@ -24,7 +24,8 @@ class ClockUnit:
         if value == "":
             return struct.pack("=BH", identifier, 0)
         else:
-            return struct.pack("=BHs", identifier, len(value), value)
+            print repr(value)
+            return struct.pack("=BH%ds" % len(value), identifier, len(value), value)
 
     def _unpackILV(self, ilv):
         size = len(ilv) - 3
@@ -66,7 +67,7 @@ class ClockUnit:
         result = self._sendAndReceive(ilv)
         id, value = self._unpackILV(result)
         if id != ClockUnit.GET_TIME_AND_DATE:
-            raise ID_MISMATCH()
+            raise IdMismatch()
         error = struct.unpack("=B", value[0])[0]
         response = value[1:]
         if error != 0:
@@ -80,17 +81,21 @@ class ClockUnit:
 
     def setDateTime(self, time):
         ClockUnit.locks[self.host_id].acquire()
-        year = time.year() - 2000
-        month =  time.month()
-        day = time.day()
-        hour = time.hour()
-        minute = time.day()
-        second = time.second()
-        value = struct("=BBBBBBB", year, month, day, hour, minute, second)
-        ilv = self._buildILV(SET_TIME_AND_DATE, value)
+        dow = (time.weekday() + 1) % 7
+        year = time.year - 2000
+        month =  time.month
+        day = time.day
+        hour = time.hour
+        minute = time.day
+        second = time.second
+        value = struct.pack("=BBBBBBBB",0, dow, year, month, day, hour, minute, second)
+        print repr(value)
+        ilv = self._buildILV(ClockUnit.SET_TIME_AND_DATE, value)
+        print repr(ilv)
         result = self._sendAndReceive(ilv)
+        id, value = self._unpackILV(result)
         if id != ClockUnit.SET_TIME_AND_DATE:
-            raise ID_MISMATCH()
+            raise IdMismatch()
         error = struct.unpack("=B", value[0])[0]
         if error != 0:
             raise ErrorMismatch()
