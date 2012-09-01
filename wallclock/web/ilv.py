@@ -45,8 +45,6 @@ class ClockUnit:
         self.ip_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.active = False
 
-
-
     def _sendAndReceive(self, ilv, close=True):
         self._open()
         start = 0
@@ -65,14 +63,12 @@ class ClockUnit:
     def getDateTime(self):
         ClockUnit.locks[self.host_id].acquire()
         ilv = self._buildILV(ClockUnit.GET_TIME_AND_DATE, "")
-        print repr(ilv)
         result = self._sendAndReceive(ilv)
         id, value = self._unpackILV(result)
         if id != ClockUnit.GET_TIME_AND_DATE:
             raise ID_MISMATCH()
         error = struct.unpack("=B", value[0])[0]
         response = value[1:]
-        print error, repr(response)
         if error != 0:
             raise ErrorMismatch()
         dow, year, month, day, hour, minute, second = \
@@ -81,5 +77,25 @@ class ClockUnit:
 
         ClockUnit.locks[self.host_id].release()
         return datetime(year+2000, month, day, hour, minute, second)
+
+    def setDateTime(self, time):
+        ClockUnit.locks[self.host_id].acquire()
+        year = time.year() - 2000
+        month =  time.month()
+        day = time.day()
+        hour = time.hour()
+        minute = time.day()
+        second = time.second()
+        value = struct("=BBBBBBB", year, month, day, hour, minute, second)
+        ilv = self._buildILV(SET_TIME_AND_DATE, value)
+        result = self._sendAndReceive(ilv)
+        if id != ClockUnit.SET_TIME_AND_DATE:
+            raise ID_MISMATCH()
+        error = struct.unpack("=B", value[0])[0]
+        if error != 0:
+            raise ErrorMismatch()
+        ClockUnit.locks[self.host_id].release()
+
+
 
 
