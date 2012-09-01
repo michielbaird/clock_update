@@ -14,9 +14,9 @@ class ErrorMismatch(Exception):
 class dict2:
     def __init__(self):
         self.d = {}
-    def.__get_item__(self, item):
-        if self.d.get(item, None) is not None:
-            self.d[item] = FileLock("/tmp/%s:%d", item)
+    def __getitem__(self, item):
+        if self.d.get(item, None) is None:
+            self.d[item] = FileLock("/tmp/%s:%d" % item)
         return self.d[item]
 
 class ClockUnit:

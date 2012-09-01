@@ -4,21 +4,25 @@ import time
 
 class FileLock:
     def __init__(self, filename):
-        self.filename = "/tmp/%s" % filename
+        self.filename = "/tmp/test"
         self.fd = None
         self.pid = os.getpid()
 
     def acquire(self):
+        print "test"
         try:
+            print "test"
             self.fd = os.open(self.filename, os.O_CREAT|os.O_EXCL|os.O_RDWR)
             # Only needed to let readers know who's locked the file
             os.write(self.fd, "%d" % self.pid)
             return 1    # return ints so this can be used in older Pythons
-        except OSError:
+        except OSError, err:
+            print repr(err)
             self.fd = None
             return 0
-    def aquireBlock(self):
-        while not self.aquire():
+
+    def acquireBlock(self):
+        while not self.acquire():
            time.sleep(1)
 
 
